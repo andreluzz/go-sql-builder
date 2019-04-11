@@ -10,7 +10,7 @@ func Expr(query string, value ...interface{}) Builder {
 	return &raw{Query: query, Value: value}
 }
 
-//Prepare build the query that will be executed
+// Prepare build the query that will be executed
 func (raw *raw) Prepare(q Query) error {
 	q.WriteString(raw.Query)
 	q.WriteValue(raw.Value...)

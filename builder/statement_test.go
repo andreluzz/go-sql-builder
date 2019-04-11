@@ -12,6 +12,12 @@ func TestSelectStatement(t *testing.T) {
 			Eq("tn.column", "100"),
 			Eq("tn.column2", "teste"),
 		),
+		// Or(
+		// 	And(
+		// 		Eq("tn.column", "200"),
+		// 		Eq("tn.column2", "other_teste"),
+		// 	),
+		// ),
 	)
 
 	query := NewQuery()
@@ -36,4 +42,15 @@ func TestUpdateStatement(t *testing.T) {
 	statement.Prepare(query)
 
 	assert.Equal(t, "UPDATE table_name SET column = ?, column2 = ? WHERE (id = ?)", query.String())
+}
+
+func TestDeleteStatement(t *testing.T) {
+	statement := Delete("table_name tn").Where(
+		Eq("tn.column", "100"),
+	)
+
+	query := NewQuery()
+	statement.Prepare(query)
+
+	assert.Equal(t, "DELETE FROM table_name tn WHERE (tn.column = ?)", query.String())
 }

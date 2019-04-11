@@ -2,7 +2,7 @@ package builder
 
 import "strings"
 
-//Statement represents a sql query
+// Statement represents a sql query
 type Statement struct {
 	Type      string
 	Table     string
@@ -12,7 +12,7 @@ type Statement struct {
 	Data      []interface{}
 }
 
-//Prepare build the query that will be executed
+// Prepare build the query that will be executed
 func (s *Statement) Prepare(q Query) error {
 	switch s.Type {
 	case "select":
@@ -21,28 +21,34 @@ func (s *Statement) Prepare(q Query) error {
 		return prepareInsert(s, q)
 	case "update":
 		return prepareUpdate(s, q)
+	case "delete":
+		return prepareDelete(s, q)
 	}
 
 	return nil
 }
 
-func prepareUpdate(s *Statement, q Query) error {
-	q.WriteString("UPDATE ")
+func prepareSelect(s *Statement, q Query) error {
+	q.WriteString("SELECT ")
+	q.WriteString(strings.Join(s.Columns, ", "))
+	q.WriteString(" FROM ")
 	q.WriteString(s.Table)
-	q.WriteString(" SET ")
 
-	for i, col := range s.Columns {
-		if i > 0 {
-			q.WriteString(", ")
+	//joins
+	if len(s.JoinTable) > 0 {
+		for _, join := range s.JoinTable {
+			err := join.Prepare(q)
+			if err != nil {
+				return err
+			}
 		}
-		q.WriteString(col)
-		q.WriteString(" = ?")
 	}
 
 	err := prepareWhere(s, q)
 	if err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -72,21 +78,29 @@ func prepareInsert(s *Statement, q Query) error {
 	return nil
 }
 
-func prepareSelect(s *Statement, q Query) error {
-	q.WriteString("SELECT ")
-	q.WriteString(strings.Join(s.Columns, ", "))
-	q.WriteString(" FROM ")
+func prepareUpdate(s *Statement, q Query) error {
+	q.WriteString("UPDATE ")
 	q.WriteString(s.Table)
+	q.WriteString(" SET ")
 
-	//joins
-	if len(s.JoinTable) > 0 {
-		for _, join := range s.JoinTable {
-			err := join.Prepare(q)
-			if err != nil {
-				return err
-			}
+	for i, col := range s.Columns {
+		if i > 0 {
+			q.WriteString(", ")
 		}
+		q.WriteString(col)
+		q.WriteString(" = ?")
 	}
+
+	err := prepareWhere(s, q)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func prepareDelete(s *Statement, q Query) error {
+	q.WriteString("DELETE FROM ")
+	q.WriteString(s.Table)
 
 	err := prepareWhere(s, q)
 	if err != nil {

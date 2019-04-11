@@ -17,21 +17,21 @@ func buildCond(q Query, pred string, cond ...Builder) error {
 	return nil
 }
 
-//And creates AND from a list of conditions.
+// And creates AND from a list of conditions.
 func And(cond ...Builder) Builder {
 	return PrepareFunc(func(query Query) error {
 		return buildCond(query, "AND", cond...)
 	})
 }
 
-//Or creates OR from a list of conditions.
+// Or creates OR from a list of conditions.
 func Or(cond ...Builder) Builder {
 	return PrepareFunc(func(query Query) error {
 		return buildCond(query, "OR", cond...)
 	})
 }
 
-//Eq crates a equal comparison
+// Eq crates a equal comparison
 func Eq(column string, value interface{}) Builder {
 	return PrepareFunc(func(q Query) error {
 		if value == nil {

@@ -1,6 +1,6 @@
 package builder
 
-//Insert returns a statement
+// Insert returns a statement
 func Insert(table string, columns ...string) *Statement {
 	return &Statement{
 		Type:    "insert",
@@ -9,7 +9,7 @@ func Insert(table string, columns ...string) *Statement {
 	}
 }
 
-//Values defines the input data to insert and update
+// Values defines the input data to insert and update
 func (s *Statement) Values(values ...interface{}) *Statement {
 	s.Data = append(s.Data, values...)
 	return s
