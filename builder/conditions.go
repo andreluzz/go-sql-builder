@@ -31,8 +31,48 @@ func Or(cond ...Builder) Builder {
 	})
 }
 
-// Eq crates a equal comparison
-func Eq(column string, value interface{}) Builder {
+//GreaterThen greater then condition
+func GreaterThen(column string, value interface{}) Builder {
+	return PrepareFunc(func(q Query) error {
+		q.WriteString(column)
+		q.WriteString(" > ?")
+		q.WriteValue(value)
+		return nil
+	})
+}
+
+//LowerThen lower then condition
+func LowerThen(column string, value interface{}) Builder {
+	return PrepareFunc(func(q Query) error {
+		q.WriteString(column)
+		q.WriteString(" < ?")
+		q.WriteValue(value)
+		return nil
+	})
+}
+
+//GreaterOrEqual greater or equal condition
+func GreaterOrEqual(column string, value interface{}) Builder {
+	return PrepareFunc(func(q Query) error {
+		q.WriteString(column)
+		q.WriteString(" >= ?")
+		q.WriteValue(value)
+		return nil
+	})
+}
+
+//LowerOrEqual lower or equal condition
+func LowerOrEqual(column string, value interface{}) Builder {
+	return PrepareFunc(func(q Query) error {
+		q.WriteString(column)
+		q.WriteString(" <= ?")
+		q.WriteValue(value)
+		return nil
+	})
+}
+
+// Equal crates a equal comparison
+func Equal(column string, value interface{}) Builder {
 	return PrepareFunc(func(q Query) error {
 		if value == nil {
 			q.WriteString(column)
@@ -41,6 +81,21 @@ func Eq(column string, value interface{}) Builder {
 		}
 		q.WriteString(column)
 		q.WriteString(" = ?")
+		q.WriteValue(value)
+		return nil
+	})
+}
+
+//NotEqual creates a not equal comparison
+func NotEqual(column string, value interface{}) Builder {
+	return PrepareFunc(func(q Query) error {
+		if value == nil {
+			q.WriteString(column)
+			q.WriteString(" IS NOT NULL")
+			return nil
+		}
+		q.WriteString(column)
+		q.WriteString(" != ?")
 		q.WriteValue(value)
 		return nil
 	})

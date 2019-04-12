@@ -7,9 +7,15 @@ type Statement struct {
 	Type      string
 	Table     string
 	Columns   []string
-	WhereCond []Builder
+	WhereCond Builder
 	JoinTable []Builder
 	Data      []interface{}
+}
+
+// Values defines the input data to insert and update
+func (s *Statement) Values(values ...interface{}) *Statement {
+	s.Data = append(s.Data, values...)
+	return s
 }
 
 // Prepare build the query that will be executed
@@ -44,7 +50,7 @@ func prepareSelect(s *Statement, q Query) error {
 		}
 	}
 
-	err := prepareWhere(s, q)
+	err := s.WhereCond.Prepare(q)
 	if err != nil {
 		return err
 	}
@@ -75,6 +81,8 @@ func prepareInsert(s *Statement, q Query) error {
 		q.WriteString(")")
 	}
 
+	q.WriteValue(s.Data...)
+
 	return nil
 }
 
@@ -91,10 +99,13 @@ func prepareUpdate(s *Statement, q Query) error {
 		q.WriteString(" = ?")
 	}
 
-	err := prepareWhere(s, q)
+	q.WriteValue(s.Data...)
+
+	err := s.WhereCond.Prepare(q)
 	if err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -102,22 +113,10 @@ func prepareDelete(s *Statement, q Query) error {
 	q.WriteString("DELETE FROM ")
 	q.WriteString(s.Table)
 
-	err := prepareWhere(s, q)
+	err := s.WhereCond.Prepare(q)
 	if err != nil {
 		return err
 	}
 
-	return nil
-}
-
-func prepareWhere(s *Statement, q Query) error {
-	//where
-	if len(s.WhereCond) > 0 {
-		q.WriteString(" WHERE ")
-		err := And(s.WhereCond...).Prepare(q)
-		if err != nil {
-			return err
-		}
-	}
 	return nil
 }
