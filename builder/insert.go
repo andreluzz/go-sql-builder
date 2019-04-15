@@ -8,3 +8,9 @@ func Insert(table string, columns ...string) *Statement {
 		Columns: columns,
 	}
 }
+
+//Return include in insert statement the return columns
+func (s *Statement) Return(columns ...string) *Statement {
+	s.ReturnColumns = append(s.ReturnColumns, columns...)
+	return s
+}

@@ -5,8 +5,8 @@ type raw struct {
 	Value []interface{}
 }
 
-// Expr allows a manually created query to be used when current SQL syntax is not supported
-func Expr(query string, value ...interface{}) Builder {
+// Raw allows a manually created query to be used when current SQL syntax is not supported
+func Raw(query string, value ...interface{}) Builder {
 	return &raw{Query: query, Value: value}
 }
 

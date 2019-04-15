@@ -1,6 +1,8 @@
 package builder
 
-import "strings"
+import (
+	"strings"
+)
 
 // Builder defines a interface to
 type Builder interface {
@@ -19,6 +21,7 @@ func (p PrepareFunc) Prepare(query Query) error {
 type Query interface {
 	WriteString(string) (int, error)
 	String() string
+	Reset()
 
 	WriteValue(v ...interface{}) (err error)
 	Value() []interface{}

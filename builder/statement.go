@@ -1,15 +1,19 @@
 package builder
 
-import "strings"
+import (
+	"strconv"
+	"strings"
+)
 
 // Statement represents a sql query
 type Statement struct {
-	Type      string
-	Table     string
-	Columns   []string
-	WhereCond Builder
-	JoinTable []Builder
-	Data      []interface{}
+	Type          string
+	Table         string
+	Columns       []string
+	WhereCond     Builder
+	JoinTable     []Builder
+	Data          []interface{}
+	ReturnColumns []string
 }
 
 // Values defines the input data to insert and update
@@ -20,18 +24,28 @@ func (s *Statement) Values(values ...interface{}) *Statement {
 
 // Prepare build the query that will be executed
 func (s *Statement) Prepare(q Query) error {
+	var err error
 	switch s.Type {
 	case "select":
-		return prepareSelect(s, q)
+		err = prepareSelect(s, q)
 	case "insert":
-		return prepareInsert(s, q)
+		err = prepareInsert(s, q)
 	case "update":
-		return prepareUpdate(s, q)
+		err = prepareUpdate(s, q)
 	case "delete":
-		return prepareDelete(s, q)
+		err = prepareDelete(s, q)
 	}
 
-	return nil
+	queryPlaceHolder := q.String()
+	total := strings.Count(queryPlaceHolder, "?")
+	for i := 0; i < total; i++ {
+		placeholder := "$" + strconv.Itoa(i+1)
+		queryPlaceHolder = strings.Replace(queryPlaceHolder, "?", placeholder, 1)
+	}
+	q.Reset()
+	q.WriteString(queryPlaceHolder)
+
+	return err
 }
 
 func prepareSelect(s *Statement, q Query) error {
@@ -79,6 +93,16 @@ func prepareInsert(s *Statement, q Query) error {
 			q.WriteString("?")
 		}
 		q.WriteString(")")
+	}
+
+	if len(s.ReturnColumns) > 0 {
+		q.WriteString(" RETURNING ")
+		for i, col := range s.ReturnColumns {
+			if i > 0 {
+				q.WriteString(", ")
+			}
+			q.WriteString(col)
+		}
 	}
 
 	q.WriteValue(s.Data...)

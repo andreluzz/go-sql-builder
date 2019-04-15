@@ -8,7 +8,7 @@ func where(where interface{}, values ...interface{}) Builder {
 		switch where := where.(type) {
 		case string:
 			q.WriteString("(")
-			Expr(where, values...).Prepare(q)
+			Raw(where, values...).Prepare(q)
 			q.WriteString(")")
 		case Builder:
 			err := And(where).Prepare(q)
