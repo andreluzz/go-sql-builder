@@ -64,9 +64,11 @@ func prepareSelect(s *Statement, q Query) error {
 		}
 	}
 
-	err := s.WhereCond.Prepare(q)
-	if err != nil {
-		return err
+	if s.WhereCond != nil {
+		err := s.WhereCond.Prepare(q)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil

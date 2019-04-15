@@ -109,7 +109,18 @@ func (suite *ActionsTestSuite) Test003LoadStruct() {
 	assert.NoError(suite.T(), err, msg)
 }
 
-func (suite *ActionsTestSuite) Test004DeleteStruct() {
+func (suite *ActionsTestSuite) Test004LoadStructArray() {
+	users := []User{}
+
+	err := LoadStruct("users", users)
+	msg := ""
+	if err != nil {
+		msg = err.Error()
+	}
+	assert.NoError(suite.T(), err, msg)
+}
+
+func (suite *ActionsTestSuite) Test005DeleteStruct() {
 	user := &User{
 		ID: suite.InstanceID,
 	}

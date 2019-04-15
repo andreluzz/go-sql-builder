@@ -1,16 +1,23 @@
 package db
 
 import (
-	"fmt"
+	"reflect"
 	"strings"
 
 	"github.com/andreluzz/go-sql-builder/builder"
 )
 
-//LoadStruct select struct values from the database table
+//LoadStruct select struct values from the database table.
+//model can be a struct or an array.
 func LoadStruct(table string, model interface{}) error {
-	query, values := StructSelectQuery(table, model)
-	fmt.Println(query)
+	query := ""
+	values := []interface{}{}
+	if reflect.TypeOf(model).Kind() == reflect.Slice {
+		query, values = StructSelectQuery(table, reflect.TypeOf(model).Elem())
+	} else {
+		query, values = StructSelectQuery(table, model)
+	}
+
 	rows, err := db.Query(query, values...)
 	if err != nil {
 		return err
