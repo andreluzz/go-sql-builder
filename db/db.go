@@ -32,6 +32,7 @@ func Connect(host string, port int, user, password, dbname string, sslmode bool)
 	return nil
 }
 
+//Close database connection
 func Close() {
 	db.Close()
 }
