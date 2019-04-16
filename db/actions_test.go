@@ -103,7 +103,7 @@ func (suite *ActionsTestSuite) Test002UpdateStruct() {
 		Email: "user@teste.com",
 	}
 
-	err := UpdateStruct("users", user, "email")
+	err := UpdateStruct("users", user, builder.Equal("id", suite.InstanceID), "email")
 	msg := ""
 	if err != nil {
 		msg = err.Error()
@@ -112,11 +112,8 @@ func (suite *ActionsTestSuite) Test002UpdateStruct() {
 }
 
 func (suite *ActionsTestSuite) Test003LoadStruct() {
-	user := &SimpleUser{
-		ID: "059fa339-025c-4104-ab55-c764d3028f63",
-	}
-
-	err := LoadStruct("users", user)
+	user := &SimpleUser{}
+	err := LoadStruct("users", user, builder.Equal("users.id", "059fa339-025c-4104-ab55-c764d3028f63"))
 	msg := ""
 	if err != nil {
 		msg = err.Error()
@@ -127,7 +124,7 @@ func (suite *ActionsTestSuite) Test003LoadStruct() {
 func (suite *ActionsTestSuite) Test004LoadStructArray() {
 	users := []User{}
 
-	err := LoadStruct("users", users)
+	err := LoadStruct("users", users, nil)
 	msg := ""
 	if err != nil {
 		msg = err.Error()
@@ -136,11 +133,7 @@ func (suite *ActionsTestSuite) Test004LoadStructArray() {
 }
 
 func (suite *ActionsTestSuite) Test005DeleteStruct() {
-	user := &User{
-		ID: suite.InstanceID,
-	}
-
-	err := DeleteStruct("users", user)
+	err := DeleteStruct("users", builder.Equal("id", suite.InstanceID))
 	msg := ""
 	if err != nil {
 		msg = err.Error()

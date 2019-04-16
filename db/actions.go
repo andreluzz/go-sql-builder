@@ -9,13 +9,13 @@ import (
 
 //LoadStruct select struct values from the database table.
 //model can be a struct or an array.
-func LoadStruct(table string, model interface{}) error {
+func LoadStruct(table string, model interface{}, conditions builder.Builder) error {
 	query := ""
 	values := []interface{}{}
 	if reflect.TypeOf(model).Kind() == reflect.Slice {
-		query, values = StructSelectQuery(table, reflect.TypeOf(model).Elem())
+		query, values = StructSelectQuery(table, reflect.TypeOf(model).Elem(), conditions)
 	} else {
-		query, values = StructSelectQuery(table, model)
+		query, values = StructSelectQuery(table, model, conditions)
 	}
 
 	rows, err := db.Query(query, values...)
@@ -48,8 +48,8 @@ func InsertStruct(table string, model interface{}) (string, error) {
 }
 
 //UpdateStruct update struct values in the database table
-func UpdateStruct(table string, model interface{}, fields ...string) error {
-	query, values, err := StructUpdateQuery(table, model, strings.Join(fields, ","))
+func UpdateStruct(table string, model interface{}, conditions builder.Builder, fields ...string) error {
+	query, values, err := StructUpdateQuery(table, model, strings.Join(fields, ","), conditions)
 	if err != nil {
 		return err
 	}
@@ -58,8 +58,8 @@ func UpdateStruct(table string, model interface{}, fields ...string) error {
 }
 
 //DeleteStruct delete struct instance in the database table
-func DeleteStruct(table string, model interface{}) error {
-	query, values, err := StructDeleteQuery(table, model)
+func DeleteStruct(table string, conditions builder.Builder) error {
+	query, values, err := StructDeleteQuery(table, conditions)
 	if err != nil {
 		return err
 	}
