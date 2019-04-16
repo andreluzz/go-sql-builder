@@ -22,6 +22,7 @@ func LoadStruct(table string, model interface{}) error {
 	if err != nil {
 		return err
 	}
+
 	err = StructScan(rows, model)
 	if err != nil {
 		return err

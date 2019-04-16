@@ -9,9 +9,7 @@ import (
 	"github.com/andreluzz/go-sql-builder/builder"
 )
 
-//StructSelectQuery generates the select query based on the struct fields
-func StructSelectQuery(table string, obj interface{}) (string, []interface{}) {
-	v := reflect.ValueOf(obj).Elem()
+func parseSelectStruct(table, alias string, obj interface{}, embedded bool) ([]string, map[string]string, string, interface{}) {
 	t := reflect.TypeOf(obj).Elem()
 
 	fields := []string{}
@@ -22,19 +20,40 @@ func StructSelectQuery(table string, obj interface{}) (string, []interface{}) {
 		tag := t.Field(i).Tag
 		if tag.Get("sql") != "" && tag.Get("table") == "" {
 			columnName := fmt.Sprintf("%s.%s %s", table, tag.Get("sql"), tag.Get("json"))
-			fields = append(fields, columnName)
-
-			if tag.Get("pk") == "true" {
-				pkField = fmt.Sprintf("%s.%s", table, tag.Get("sql"))
-				pkValue = v.Field(i).Interface()
+			if embedded {
+				columnName = fmt.Sprintf("%s.%s %s__%s", table, tag.Get("sql"), alias, tag.Get("json"))
 			}
-		} else if tag.Get("table") != "" {
+			fields = append(fields, columnName)
+			if tag.Get("pk") == "true" && !embedded {
+				pkField = fmt.Sprintf("%s.%s", table, tag.Get("sql"))
+				pkValue = reflect.ValueOf(obj).Elem().Field(i).Interface()
+			}
+		} else if tag.Get("table") != "" && tag.Get("embedded") == "" {
 			columnName := fmt.Sprintf("%s.%s %s", tag.Get("alias"), tag.Get("sql"), tag.Get("json"))
 			fields = append(fields, columnName)
-			table := fmt.Sprintf("%s %s", tag.Get("table"), tag.Get("alias"))
-			joins[table] = tag.Get("on")
+			joinTable := fmt.Sprintf("%s %s", tag.Get("table"), tag.Get("alias"))
+			joins[joinTable] = tag.Get("on")
+		} else if tag.Get("embedded") == "slice" {
+			if tag.Get("relation_table") != "" {
+				joinTable := fmt.Sprintf("%s %s", tag.Get("relation_table"), tag.Get("relation_alias"))
+				joins[joinTable] = tag.Get("relation_on")
+			}
+			joinTable := fmt.Sprintf("%s %s", tag.Get("table"), tag.Get("alias"))
+			joins[joinTable] = tag.Get("on")
+			embeddedFields, embeddedJoins, _, _ := parseSelectStruct(tag.Get("alias"), tag.Get("json"), reflect.ValueOf(obj).Elem().Field(i).Interface(), true)
+			fields = append(fields, embeddedFields...)
+			for k, v := range embeddedJoins {
+				joins[k] = v
+			}
 		}
 	}
+
+	return fields, joins, pkField, pkValue
+}
+
+//StructSelectQuery generates the select query based on the struct fields
+func StructSelectQuery(table string, obj interface{}) (string, []interface{}) {
+	fields, joins, pkField, pkValue := parseSelectStruct(table, "", obj, false)
 
 	statement := builder.Select(fields...).From(table)
 	for t, on := range joins {
@@ -85,12 +104,13 @@ func StructUpdateQuery(table string, obj interface{}, updatableFields string) (s
 	pkField := ""
 	var pkValue interface{}
 	for i := 0; i < t.NumField(); i++ {
-		if t.Field(i).Tag.Get("pk") != "true" && strings.Contains(updatableFields, t.Field(i).Tag.Get("sql")) {
-			fields = append(fields, t.Field(i).Tag.Get("sql"))
+		tag := t.Field(i).Tag
+		if tag.Get("pk") != "true" && tag.Get("embedded") == "" && strings.Contains(updatableFields, tag.Get("sql")) {
+			fields = append(fields, tag.Get("sql"))
 			args = append(args, v.Field(i).Interface())
 		}
-		if t.Field(i).Tag.Get("pk") == "true" {
-			pkField = t.Field(i).Tag.Get("sql")
+		if tag.Get("pk") == "true" {
+			pkField = tag.Get("sql")
 			pkValue = v.Field(i).Interface()
 		}
 	}

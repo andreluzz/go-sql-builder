@@ -7,12 +7,11 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestStructUpdateQuery(t *testing.T) {
+func TestStructSelectQuery(t *testing.T) {
 	user := &User{
-		ID:    "00000001",
-		Email: "user@teste.com",
+		ID: "059fa339-025c-4104-ab55-c764d3028f63",
 	}
-	query, value, _ := StructUpdateQuery("users", user, "email")
-	fmt.Println(value)
+	query, values := StructSelectQuery("users", user)
+	fmt.Println(values)
 	assert.Equal(t, "query", query)
 }

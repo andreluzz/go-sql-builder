@@ -18,12 +18,27 @@ type Config struct {
 }
 
 type User struct {
-	ID          string `json:"id" sql:"id" pk:"true"`
-	FirstName   string `json:"firstName" sql:"first_name"`
-	LastName    string `json:"lastName" sql:"last_name"`
-	Email       string `json:"email" sql:"email"`
-	Description string `json:"description" sql:"value" alias:"description" table:"translations" on:"description.structure_id = users.id and description.structure_field = 'description'"`
-	Profile     string `json:"profile" sql:"value" alias:"prf" table:"translations" on:"prf.structure_id = users.id and prf.structure_field = 'profile'"`
+	ID          string  `json:"id" sql:"id" pk:"true"`
+	FirstName   string  `json:"firstName" sql:"first_name"`
+	LastName    string  `json:"lastName" sql:"last_name"`
+	Email       string  `json:"email" sql:"email"`
+	Description string  `json:"description" sql:"value" alias:"description" table:"translations" on:"description.structure_id = users.id and description.structure_field = 'description'"`
+	Profile     string  `json:"profile" sql:"value" alias:"prf" table:"translations" on:"prf.structure_id = users.id and prf.structure_field = 'profile'"`
+	Groups      []Group `json:"groups" embedded:"slice" alias:"grp" table:"groups" on:"grp.id = grp_usr.group_id" relation_alias:"grp_usr" relation_table:"groups_users" relation_on:"users.id = grp_usr.user_id"`
+}
+
+type SimpleUser struct {
+	ID        string  `json:"id" sql:"id" pk:"true"`
+	FirstName string  `json:"firstName" sql:"first_name"`
+	LastName  string  `json:"lastName" sql:"last_name"`
+	Email     string  `json:"email" sql:"email"`
+	Groups    []Group `json:"groups" embedded:"slice" alias:"grp" table:"groups" on:"grp.id = grp_usr.group_id" relation_alias:"grp_usr" relation_table:"groups_users" relation_on:"users.id = grp_usr.user_id"`
+}
+
+type Group struct {
+	ID     string `json:"id" sql:"id" pk:"true"`
+	Code   string `json:"code" sql:"code"`
+	Active bool   `json:"active" sql:"active"`
 }
 
 type ActionsTestSuite struct {
@@ -97,8 +112,8 @@ func (suite *ActionsTestSuite) Test002UpdateStruct() {
 }
 
 func (suite *ActionsTestSuite) Test003LoadStruct() {
-	user := &User{
-		ID: suite.InstanceID,
+	user := &SimpleUser{
+		ID: "059fa339-025c-4104-ab55-c764d3028f63",
 	}
 
 	err := LoadStruct("users", user)
