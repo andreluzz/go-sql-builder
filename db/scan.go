@@ -8,7 +8,7 @@ import (
 )
 
 //StructScan write rows data to struct
-func StructScan(rows *sql.Rows, obj interface{}) error {
+func StructScan(rows *sql.Rows, obj interface{}) ([]byte, error) {
 
 	cols, _ := rows.Columns()
 
@@ -26,7 +26,7 @@ func StructScan(rows *sql.Rows, obj interface{}) error {
 		}
 
 		if err := rows.Scan(columnPointers...); err != nil {
-			return err
+			return nil, err
 		}
 
 		mapJSON := make(map[string]interface{})
@@ -56,7 +56,7 @@ func StructScan(rows *sql.Rows, obj interface{}) error {
 	rows.Close()
 
 	if len(results) == 0 {
-		return nil
+		return nil, nil
 	}
 
 	var jsonMap []byte
@@ -65,9 +65,8 @@ func StructScan(rows *sql.Rows, obj interface{}) error {
 	} else {
 		jsonMap, _ = json.Marshal(results)
 	}
-	json.Unmarshal(jsonMap, obj)
 
-	return nil
+	return jsonMap, nil
 }
 
 func getRowEmbeddedObject(name string, id interface{}, rows *sql.Rows) []map[string]interface{} {

@@ -49,6 +49,7 @@ func (s *Statement) Prepare(q Query) error {
 }
 
 func prepareSelect(s *Statement, q Query) error {
+
 	q.WriteString("SELECT ")
 	q.WriteString(strings.Join(s.Columns, ", "))
 	q.WriteString(" FROM ")

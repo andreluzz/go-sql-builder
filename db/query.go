@@ -18,13 +18,13 @@ func parseSelectStruct(table, alias string, obj interface{}, embedded bool) ([]s
 	for i := 0; i < t.NumField(); i++ {
 		tag := t.Field(i).Tag
 		if tag.Get("sql") != "" && tag.Get("table") == "" {
-			columnName := fmt.Sprintf("%s.%s %s", table, tag.Get("sql"), tag.Get("json"))
+			columnName := fmt.Sprintf("%s.%s as %s", table, tag.Get("sql"), tag.Get("json"))
 			if embedded {
-				columnName = fmt.Sprintf("%s.%s %s__%s", table, tag.Get("sql"), alias, tag.Get("json"))
+				columnName = fmt.Sprintf("%s.%s as %s__%s", table, tag.Get("sql"), alias, tag.Get("json"))
 			}
 			fields = append(fields, columnName)
 		} else if tag.Get("table") != "" && tag.Get("embedded") == "" {
-			columnName := fmt.Sprintf("%s.%s %s", tag.Get("alias"), tag.Get("sql"), tag.Get("json"))
+			columnName := fmt.Sprintf("%s.%s as %s", tag.Get("alias"), tag.Get("sql"), tag.Get("json"))
 			fields = append(fields, columnName)
 			joinTable := fmt.Sprintf("%s %s", tag.Get("table"), tag.Get("alias"))
 			joins[joinTable] = tag.Get("on")
@@ -35,7 +35,7 @@ func parseSelectStruct(table, alias string, obj interface{}, embedded bool) ([]s
 			}
 			joinTable := fmt.Sprintf("%s %s", tag.Get("table"), tag.Get("alias"))
 			joins[joinTable] = tag.Get("on")
-			embeddedFields, embeddedJoins := parseSelectStruct(tag.Get("alias"), tag.Get("json"), reflect.ValueOf(obj).Elem().Field(i).Interface(), true)
+			embeddedFields, embeddedJoins := parseSelectStruct(tag.Get("alias"), tag.Get("json"), reflect.ValueOf(t).Elem().Field(i).Interface(), true)
 			fields = append(fields, embeddedFields...)
 			for k, v := range embeddedJoins {
 				joins[k] = v

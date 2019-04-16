@@ -1,6 +1,7 @@
 package db
 
 import (
+	"fmt"
 	"reflect"
 	"strings"
 
@@ -9,25 +10,18 @@ import (
 
 //LoadStruct select struct values from the database table.
 //model can be a struct or an array.
-func LoadStruct(table string, model interface{}, conditions builder.Builder) error {
+func LoadStruct(table string, model interface{}, conditions builder.Builder) ([]byte, error) {
 	query := ""
 	values := []interface{}{}
-	if reflect.TypeOf(model).Kind() == reflect.Slice {
-		query, values = StructSelectQuery(table, reflect.TypeOf(model).Elem(), conditions)
-	} else {
-		query, values = StructSelectQuery(table, model, conditions)
-	}
+	query, values = StructSelectQuery(table, model, conditions)
 
+	fmt.Println(query)
 	rows, err := db.Query(query, values...)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	err = StructScan(rows, model)
-	if err != nil {
-		return err
-	}
-	return nil
+	return StructScan(rows, model)
 }
 
 //InsertStruct insert struct values in the database table

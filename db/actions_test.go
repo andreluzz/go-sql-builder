@@ -1,6 +1,7 @@
 package db
 
 import (
+	"encoding/json"
 	"testing"
 
 	"github.com/BurntSushi/toml"
@@ -18,13 +19,13 @@ type Config struct {
 }
 
 type User struct {
-	ID          string  `json:"id" sql:"id" pk:"true"`
-	FirstName   string  `json:"firstName" sql:"first_name"`
-	LastName    string  `json:"lastName" sql:"last_name"`
-	Email       string  `json:"email" sql:"email"`
-	Description string  `json:"description" sql:"value" alias:"description" table:"translations" on:"description.structure_id = users.id and description.structure_field = 'description'"`
-	Profile     string  `json:"profile" sql:"value" alias:"prf" table:"translations" on:"prf.structure_id = users.id and prf.structure_field = 'profile'"`
-	Groups      []Group `json:"groups" readonly:"true" embedded:"slice" alias:"grp" table:"groups" on:"grp.id = grp_usr.group_id" relation_alias:"grp_usr" relation_table:"groups_users" relation_on:"users.id = grp_usr.user_id"`
+	ID          string `json:"id" sql:"id" pk:"true"`
+	FirstName   string `json:"firstName" sql:"first_name"`
+	LastName    string `json:"lastName" sql:"last_name"`
+	Email       string `json:"email" sql:"email"`
+	Description string `json:"description" sql:"value" alias:"description" table:"translations" on:"description.structure_id = users.id and description.structure_field = 'description'"`
+	Profile     string `json:"profile" sql:"value" alias:"prf" table:"translations" on:"prf.structure_id = users.id and prf.structure_field = 'profile'"`
+	//Groups      []Group `json:"groups" readonly:"true" embedded:"slice" alias:"grp" table:"groups" on:"grp.id = grp_usr.group_id" relation_alias:"grp_usr" relation_table:"groups_users" relation_on:"users.id = grp_usr.user_id"`
 }
 
 type SimpleUser struct {
@@ -113,7 +114,8 @@ func (suite *ActionsTestSuite) Test002UpdateStruct() {
 
 func (suite *ActionsTestSuite) Test003LoadStruct() {
 	user := &SimpleUser{}
-	err := LoadStruct("users", user, builder.Equal("users.id", "059fa339-025c-4104-ab55-c764d3028f63"))
+	jsonByte, err := LoadStruct("users", user, builder.Equal("users.id", "059fa339-025c-4104-ab55-c764d3028f63"))
+	json.Unmarshal(jsonByte, user)
 	msg := ""
 	if err != nil {
 		msg = err.Error()
@@ -124,7 +126,8 @@ func (suite *ActionsTestSuite) Test003LoadStruct() {
 func (suite *ActionsTestSuite) Test004LoadStructArray() {
 	users := []User{}
 
-	err := LoadStruct("users", users, nil)
+	jsonByte, err := LoadStruct("users", users, nil)
+	json.Unmarshal(jsonByte, &users)
 	msg := ""
 	if err != nil {
 		msg = err.Error()
