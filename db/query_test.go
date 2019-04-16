@@ -8,10 +8,19 @@ import (
 )
 
 func TestStructSelectQuery(t *testing.T) {
-	user := &User{
-		ID: "059fa339-025c-4104-ab55-c764d3028f63",
+	users := []User{
+		{
+			FirstName: "teste 1",
+			LastName:  "teste 1",
+			Email:     "ahahhaha",
+		},
+		{
+			FirstName: "teste 2",
+			LastName:  "teste 2",
+		},
 	}
-	query, values := StructSelectQuery("users", user)
+
+	query, values := StructMultipleInsertQuery("users", users)
 	fmt.Println(values)
 	assert.Equal(t, "query", query)
 }

@@ -24,7 +24,7 @@ type User struct {
 	Email       string  `json:"email" sql:"email"`
 	Description string  `json:"description" sql:"value" alias:"description" table:"translations" on:"description.structure_id = users.id and description.structure_field = 'description'"`
 	Profile     string  `json:"profile" sql:"value" alias:"prf" table:"translations" on:"prf.structure_id = users.id and prf.structure_field = 'profile'"`
-	Groups      []Group `json:"groups" embedded:"slice" alias:"grp" table:"groups" on:"grp.id = grp_usr.group_id" relation_alias:"grp_usr" relation_table:"groups_users" relation_on:"users.id = grp_usr.user_id"`
+	Groups      []Group `json:"groups" readonly:"true" embedded:"slice" alias:"grp" table:"groups" on:"grp.id = grp_usr.group_id" relation_alias:"grp_usr" relation_table:"groups_users" relation_on:"users.id = grp_usr.user_id"`
 }
 
 type SimpleUser struct {
@@ -32,7 +32,7 @@ type SimpleUser struct {
 	FirstName string  `json:"firstName" sql:"first_name"`
 	LastName  string  `json:"lastName" sql:"last_name"`
 	Email     string  `json:"email" sql:"email"`
-	Groups    []Group `json:"groups" embedded:"slice" alias:"grp" table:"groups" on:"grp.id = grp_usr.group_id" relation_alias:"grp_usr" relation_table:"groups_users" relation_on:"users.id = grp_usr.user_id"`
+	Groups    []Group `json:"groups" readonly:"true" embedded:"slice" alias:"grp" table:"groups" on:"grp.id = grp_usr.group_id" relation_alias:"grp_usr" relation_table:"groups_users" relation_on:"users.id = grp_usr.user_id"`
 }
 
 type Group struct {

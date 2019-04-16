@@ -94,6 +94,40 @@ func StructInsertQuery(table string, obj interface{}) (string, []interface{}) {
 	return query.String(), query.Value()
 }
 
+//StructMultipleInsertQuery generates the insert query based on the array of structs
+func StructMultipleInsertQuery(table string, obj interface{}) (string, []interface{}) {
+	t := reflect.TypeOf(obj).Elem()
+	fields := []string{}
+	for i := 0; i < t.NumField(); i++ {
+		if t.Field(i).Tag.Get("pk") != "true" && t.Field(i).Tag.Get("table") == "" {
+			fields = append(fields, t.Field(i).Tag.Get("sql"))
+		}
+	}
+
+	statement := builder.Insert(table, fields...)
+
+	switch reflect.TypeOf(obj).Kind() {
+	case reflect.Slice:
+		s := reflect.ValueOf(obj)
+		for i := 0; i < s.Len(); i++ {
+			valueStruct := s.Index(i)
+			args := []interface{}{}
+			for i := 0; i < valueStruct.Type().NumField(); i++ {
+				tag := valueStruct.Type().Field(i).Tag
+				if tag.Get("pk") != "true" && tag.Get("table") == "" {
+					args = append(args, valueStruct.Field(i).Interface())
+				}
+			}
+			statement.Values(args...)
+		}
+	}
+
+	query := builder.NewQuery()
+	statement.Prepare(query)
+
+	return query.String(), query.Value()
+}
+
 //StructUpdateQuery generates the update query based on the struct fields
 func StructUpdateQuery(table string, obj interface{}, updatableFields string) (string, []interface{}, error) {
 	v := reflect.ValueOf(obj).Elem()

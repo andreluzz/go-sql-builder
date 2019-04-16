@@ -32,9 +32,18 @@ func LoadStruct(table string, model interface{}) error {
 
 //InsertStruct insert struct values in the database table
 func InsertStruct(table string, model interface{}) (string, error) {
+	var err error
 	id := ""
-	query, values := StructInsertQuery(table, model)
-	err := db.QueryRow(query, values...).Scan(&id)
+	query := ""
+	values := []interface{}{}
+	if reflect.TypeOf(model).Kind() == reflect.Slice {
+		query, values = StructMultipleInsertQuery(table, model)
+		_, err = db.Exec(query, values...)
+	} else {
+		query, values = StructInsertQuery(table, model)
+		err = db.QueryRow(query, values...).Scan(&id)
+	}
+
 	return id, err
 }
 
