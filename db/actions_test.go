@@ -1,7 +1,6 @@
 package db
 
 import (
-	"encoding/json"
 	"testing"
 
 	"github.com/BurntSushi/toml"
@@ -25,15 +24,13 @@ type User struct {
 	Email       string `json:"email" sql:"email"`
 	Description string `json:"description" sql:"value" alias:"description" table:"translations" on:"description.structure_id = users.id and description.structure_field = 'description'"`
 	Profile     string `json:"profile" sql:"value" alias:"prf" table:"translations" on:"prf.structure_id = users.id and prf.structure_field = 'profile'"`
-	//Groups      []Group `json:"groups" readonly:"true" embedded:"slice" alias:"grp" table:"groups" on:"grp.id = grp_usr.group_id" relation_alias:"grp_usr" relation_table:"groups_users" relation_on:"users.id = grp_usr.user_id"`
 }
 
 type SimpleUser struct {
-	ID        string  `json:"id" sql:"id" pk:"true"`
-	FirstName string  `json:"firstName" sql:"first_name"`
-	LastName  string  `json:"lastName" sql:"last_name"`
-	Email     string  `json:"email" sql:"email"`
-	Groups    []Group `json:"groups" readonly:"true" embedded:"slice" alias:"grp" table:"groups" on:"grp.id = grp_usr.group_id" relation_alias:"grp_usr" relation_table:"groups_users" relation_on:"users.id = grp_usr.user_id"`
+	ID        string `json:"id" sql:"id" pk:"true"`
+	FirstName string `json:"firstName" sql:"first_name"`
+	LastName  string `json:"lastName" sql:"last_name"`
+	Email     string `json:"email" sql:"email"`
 }
 
 type Group struct {
@@ -113,35 +110,22 @@ func (suite *ActionsTestSuite) Test002UpdateStruct() {
 }
 
 func (suite *ActionsTestSuite) Test003LoadStruct() {
-	user := &SimpleUser{}
-	jsonByte, err := LoadStruct("users", user, builder.Equal("users.id", "059fa339-025c-4104-ab55-c764d3028f63"))
-	json.Unmarshal(jsonByte, user)
-	msg := ""
-	if err != nil {
-		msg = err.Error()
-	}
-	assert.NoError(suite.T(), err, msg)
+	user := &User{}
+	err := LoadStruct("users", user, builder.Equal("users.id", suite.InstanceID))
+	assert.NoError(suite.T(), err, "Error loading struct")
+	assert.Equal(suite.T(), "user@teste.com", user.Email)
 }
 
 func (suite *ActionsTestSuite) Test004LoadStructArray() {
 	users := []User{}
-
-	jsonByte, err := LoadStruct("users", users, nil)
-	json.Unmarshal(jsonByte, &users)
-	msg := ""
-	if err != nil {
-		msg = err.Error()
-	}
-	assert.NoError(suite.T(), err, msg)
+	err := LoadStruct("users", &users, nil)
+	assert.NoError(suite.T(), err, "Error loading array struct")
+	assert.NotEmpty(suite.T(), users, "Empty array")
 }
 
 func (suite *ActionsTestSuite) Test005DeleteStruct() {
 	err := DeleteStruct("users", builder.Equal("id", suite.InstanceID))
-	msg := ""
-	if err != nil {
-		msg = err.Error()
-	}
-	assert.NoError(suite.T(), err, msg)
+	assert.NoError(suite.T(), err, "Error deleting object")
 }
 
 // In order for 'go test' to run this suite, we need to create

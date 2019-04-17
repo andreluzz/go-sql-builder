@@ -4,23 +4,15 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/andreluzz/go-sql-builder/builder"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestStructSelectQuery(t *testing.T) {
-	users := []User{
-		{
-			FirstName: "teste 1",
-			LastName:  "teste 1",
-			Email:     "ahahhaha",
-		},
-		{
-			FirstName: "teste 2",
-			LastName:  "teste 2",
-		},
-	}
+	users := []User{}
 
-	query, values := StructMultipleInsertQuery("users", users)
+	query, values, err := StructSelectQuery("users", &users, builder.Equal("id", "0000001"))
+	assert.NoError(t, err, "invalid interface")
 	fmt.Println(values)
 	assert.Equal(t, "query", query)
 }

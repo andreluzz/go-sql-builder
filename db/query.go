@@ -9,46 +9,42 @@ import (
 	"github.com/andreluzz/go-sql-builder/builder"
 )
 
-func parseSelectStruct(table, alias string, obj interface{}, embedded bool) ([]string, map[string]string) {
-	t := reflect.TypeOf(obj).Elem()
+func parseSelectStruct(table, alias string, obj interface{}, embedded bool) ([]string, map[string]string, error) {
+	t := reflect.TypeOf(obj)
+	if t.Kind() != reflect.Ptr {
+		return nil, nil, errors.New("object interface must be a pointer")
+	}
+	element := t.Elem()
+	if element.Kind() == reflect.Slice {
+		element = element.Elem()
+	}
 
 	fields := []string{}
 	joins := make(map[string]string)
 
-	for i := 0; i < t.NumField(); i++ {
-		tag := t.Field(i).Tag
+	for i := 0; i < element.NumField(); i++ {
+		tag := element.Field(i).Tag
 		if tag.Get("sql") != "" && tag.Get("table") == "" {
 			columnName := fmt.Sprintf("%s.%s as %s", table, tag.Get("sql"), tag.Get("json"))
-			if embedded {
-				columnName = fmt.Sprintf("%s.%s as %s__%s", table, tag.Get("sql"), alias, tag.Get("json"))
-			}
 			fields = append(fields, columnName)
-		} else if tag.Get("table") != "" && tag.Get("embedded") == "" {
+		} else if tag.Get("table") != "" {
 			columnName := fmt.Sprintf("%s.%s as %s", tag.Get("alias"), tag.Get("sql"), tag.Get("json"))
 			fields = append(fields, columnName)
 			joinTable := fmt.Sprintf("%s %s", tag.Get("table"), tag.Get("alias"))
 			joins[joinTable] = tag.Get("on")
-		} else if tag.Get("embedded") == "slice" {
-			if tag.Get("relation_table") != "" {
-				joinTable := fmt.Sprintf("%s %s", tag.Get("relation_table"), tag.Get("relation_alias"))
-				joins[joinTable] = tag.Get("relation_on")
-			}
-			joinTable := fmt.Sprintf("%s %s", tag.Get("table"), tag.Get("alias"))
-			joins[joinTable] = tag.Get("on")
-			embeddedFields, embeddedJoins := parseSelectStruct(tag.Get("alias"), tag.Get("json"), reflect.ValueOf(t).Elem().Field(i).Interface(), true)
-			fields = append(fields, embeddedFields...)
-			for k, v := range embeddedJoins {
-				joins[k] = v
-			}
 		}
 	}
 
-	return fields, joins
+	return fields, joins, nil
 }
 
 //StructSelectQuery generates the select query based on the struct fields
-func StructSelectQuery(table string, obj interface{}, conditions builder.Builder) (string, []interface{}) {
-	fields, joins := parseSelectStruct(table, "", obj, false)
+//Object can be a poninter to an array or struct
+func StructSelectQuery(table string, obj interface{}, conditions builder.Builder) (string, []interface{}, error) {
+	fields, joins, err := parseSelectStruct(table, "", obj, false)
+	if err != nil {
+		return "", nil, err
+	}
 
 	statement := builder.Select(fields...).From(table)
 	for t, on := range joins {
@@ -62,7 +58,7 @@ func StructSelectQuery(table string, obj interface{}, conditions builder.Builder
 	query := builder.NewQuery()
 	statement.Prepare(query)
 
-	return query.String(), query.Value()
+	return query.String(), query.Value(), nil
 }
 
 //StructInsertQuery generates the insert query based on the struct fields

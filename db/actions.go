@@ -9,16 +9,17 @@ import (
 )
 
 //LoadStruct select struct values from the database table.
-//model can be a struct or an array.
-func LoadStruct(table string, model interface{}, conditions builder.Builder) ([]byte, error) {
-	query := ""
-	values := []interface{}{}
-	query, values = StructSelectQuery(table, model, conditions)
-
+//model must be a pointer to a struct or an array.
+func LoadStruct(table string, model interface{}, conditions builder.Builder) error {
+	query, values, err := StructSelectQuery(table, model, conditions)
+	if err != nil {
+		return err
+	}
 	fmt.Println(query)
 	rows, err := db.Query(query, values...)
 	if err != nil {
-		return nil, err
+		// TODO: log query and values when executing query generates error
+		return err
 	}
 
 	return StructScan(rows, model)
