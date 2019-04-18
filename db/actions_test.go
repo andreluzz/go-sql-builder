@@ -22,15 +22,9 @@ type User struct {
 	FirstName   string `json:"firstName" sql:"first_name"`
 	LastName    string `json:"lastName" sql:"last_name"`
 	Email       string `json:"email" sql:"email"`
+	Password    string `json:"password" sql:"password"`
 	Description string `json:"description" sql:"value" alias:"description" table:"translations" on:"description.structure_id = users.id and description.structure_field = 'description'"`
 	Profile     string `json:"profile" sql:"value" alias:"prf" table:"translations" on:"prf.structure_id = users.id and prf.structure_field = 'profile'"`
-}
-
-type SimpleUser struct {
-	ID        string `json:"id" sql:"id" pk:"true"`
-	FirstName string `json:"firstName" sql:"first_name"`
-	LastName  string `json:"lastName" sql:"last_name"`
-	Email     string `json:"email" sql:"email"`
 }
 
 type Group struct {
@@ -59,6 +53,7 @@ func (suite *ActionsTestSuite) Test001InsertStruct() {
 		FirstName:   "Teste",
 		LastName:    "ORM",
 		Email:       "teste@teste.com",
+		Password:    "12345",
 		Description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
 		Profile:     "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
 	}
@@ -123,7 +118,15 @@ func (suite *ActionsTestSuite) Test004LoadStructArray() {
 	assert.NotEmpty(suite.T(), users, "Empty array")
 }
 
-func (suite *ActionsTestSuite) Test005DeleteStruct() {
+func (suite *ActionsTestSuite) Test005QueryStruct() {
+	statement := builder.Select("id", "first_name", "email").From("users").Where(builder.Equal("id", suite.InstanceID))
+	user := User{}
+	err := QueryStruct(statement, &user)
+	assert.NoError(suite.T(), err, "Error loading struct")
+	assert.Equal(suite.T(), "user@teste.com", user.Email)
+}
+
+func (suite *ActionsTestSuite) Test006DeleteStruct() {
 	err := DeleteStruct("users", builder.Equal("id", suite.InstanceID))
 	assert.NoError(suite.T(), err, "Error deleting object")
 }

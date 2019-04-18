@@ -1,12 +1,28 @@
 package db
 
 import (
+	"database/sql"
 	"fmt"
 	"reflect"
 	"strings"
 
 	"github.com/andreluzz/go-sql-builder/builder"
 )
+
+//QueryStruct prepare and execute the statement and then populates the model
+//model must be a pointer to a struct or an array.
+func QueryStruct(statement builder.Builder, model interface{}) error {
+	query := builder.NewQuery()
+	statement.Prepare(query)
+	fmt.Println(query.String())
+	rows, err := db.Query(query.String(), query.Value()...)
+	if err != nil {
+		// TODO: log query and values when executing query generates error
+		return err
+	}
+
+	return StructScan(rows, model)
+}
 
 //LoadStruct select struct values from the database table.
 //model must be a pointer to a struct or an array.
@@ -68,4 +84,11 @@ func Exec(statement builder.Builder) error {
 	statement.Prepare(query)
 	_, err := db.Exec(query.String(), query.Value()...)
 	return err
+}
+
+//Query prepare the statement, executes and returns the Rows
+func Query(statement builder.Builder) (*sql.Rows, error) {
+	query := builder.NewQuery()
+	statement.Prepare(query)
+	return db.Query(query.String(), query.Value()...)
 }
