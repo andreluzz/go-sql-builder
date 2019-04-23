@@ -15,13 +15,18 @@ type join struct {
 }
 
 func parseSelectStruct(table, alias string, obj interface{}, embedded bool) ([]string, []join, error) {
-	t := reflect.TypeOf(obj)
-	if t.Kind() != reflect.Ptr {
-		return nil, nil, errors.New("object interface must be a pointer")
-	}
-	element := t.Elem()
-	if element.Kind() == reflect.Slice {
-		element = element.Elem()
+	element := reflect.TypeOf(obj)
+
+	if embedded {
+		element = obj.(reflect.Type)
+	} else {
+		if element.Kind() == reflect.Ptr {
+			element = element.Elem()
+		}
+		if element.Kind() == reflect.Slice {
+			element = element.Elem()
+		}
+		fmt.Println(element)
 	}
 
 	fields := []string{}
@@ -50,14 +55,11 @@ func parseSelectStruct(table, alias string, obj interface{}, embedded bool) ([]s
 			} else {
 				joins = append(joins, join{joinTable, tag.Get("on")})
 			}
-		} else if tag.Get("sql") == "" && tag.Get("table") != "" {
-			v := reflect.ValueOf(obj)
-			v = reflect.Indirect(v)
+		} else if tag.Get("sql") == "" && tag.Get("table") != "" && !embedded {
 
 			joinTable := fmt.Sprintf("%s %s", tag.Get("table"), tag.Get("alias"))
 			joins = append(joins, join{joinTable, tag.Get("on")})
-
-			structFields, structJoins, err := parseSelectStruct(tag.Get("table"), tag.Get("alias"), v.Field(i).Interface(), true)
+			structFields, structJoins, err := parseSelectStruct(tag.Get("table"), tag.Get("alias"), element.Field(i).Type.Elem(), true)
 			if err != nil {
 				return nil, nil, err
 			}

@@ -18,22 +18,16 @@ type Config struct {
 }
 
 type User struct {
-	ID          string `json:"id" sql:"id" pk:"true"`
-	FirstName   string `json:"firstname" sql:"first_name"`
-	LastName    string `json:"lastname" sql:"last_name"`
-	Email       string `json:"email" sql:"email"`
-	Password    string `json:"password" sql:"password"`
-	Description string `json:"description" sql:"value" alias:"description" table:"translations" on:"description.structure_id = users.id and description.structure_field = 'description'"`
-	Profile     string `json:"profile" sql:"value" alias:"prf" table:"translations" on:"prf.structure_id = users.id and prf.structure_field = 'profile'"`
-}
-
-type Group struct {
 	ID            string `json:"id" sql:"id" pk:"true"`
-	Code          string `json:"code" sql:"code"`
-	Active        bool   `json:"active" sql:"active"`
+	Username      string `json:"username" sql:"username"`
+	FirstName     string `json:"firstname" sql:"first_name"`
+	LastName      string `json:"lastname" sql:"last_name"`
+	Email         string `json:"email" sql:"email"`
+	Password      string `json:"password" sql:"password"`
 	CreatedBy     string `json:"created_by" sql:"created_by"`
-	CreatedByUser *User  `json:"created_by_user" table:"users" alias:"created_by_user" on:"created_by_user.id = core_groups.created_by"`
-	UpdatedByUser *User  `json:"updated_by_user" table:"users" alias:"updated_by_user" on:"updated_by_user.id = core_groups.updated_by"`
+	UpdatedBy     string `json:"updated_by" sql:"updated_by"`
+	CreatedByUser *User  `json:"created_by_user" table:"core_users" alias:"created_by_user" on:"created_by_user.id = core_users.created_by"`
+	UpdatedByUser *User  `json:"updated_by_user" table:"core_users" alias:"updated_by_user" on:"updated_by_user.id = core_users.updated_by"`
 }
 
 type ActionsTestSuite struct {
@@ -53,37 +47,14 @@ func (suite *ActionsTestSuite) SetupTest() {
 // suite.
 func (suite *ActionsTestSuite) Test001InsertStruct() {
 	user := &User{
-		FirstName:   "Teste",
-		LastName:    "ORM",
-		Email:       "teste@teste.com",
-		Password:    "12345",
-		Description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
-		Profile:     "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+		FirstName: "Teste",
+		LastName:  "ORM",
+		Email:     "teste@teste.com",
+		Password:  "12345",
 	}
 
 	id, err := InsertStruct("users", user)
 	msg := ""
-	if err != nil {
-		msg = err.Error()
-	}
-	assert.NoError(suite.T(), err, msg)
-
-	statement := builder.Insert("translations", "structure_type", "structure_field", "structure_id", "value", "language_code")
-	statement.Values("user", "description", id, user.Description, "pt-br")
-	//statement.Values("user", "profile", id, user.Profile, "pt-br")
-
-	err = Exec(statement)
-	if err != nil {
-		msg = err.Error()
-	}
-	assert.NoError(suite.T(), err, msg)
-
-	values := []interface{}{
-		id,
-		user.Profile,
-	}
-	rawQuery := builder.Raw("insert into translations (structure_type, structure_field, structure_id, value, language_code) values ('user', 'profile', $1, $2, 'pt-br')", values...)
-	err = Exec(rawQuery)
 	if err != nil {
 		msg = err.Error()
 	}
@@ -122,11 +93,11 @@ func (suite *ActionsTestSuite) Test004LoadStructArray() {
 }
 
 func (suite *ActionsTestSuite) Test005LoadEmbeddedStruct() {
-	group := Group{}
-	err := LoadStruct("core_groups", &group, builder.Equal("core_groups.id", "2ab02254-8878-42a5-901c-9d40e3052ac8"))
+	user := User{}
+	err := LoadStruct("core_users", &user, builder.Equal("core_users.id", "57a97aaf-16da-44ef-a8be-b1caf52becd6"))
 	assert.NoError(suite.T(), err, "Error loading array struct")
-	assert.Equal(suite.T(), "Andre", group.CreatedByUser.FirstName, "Invalid ceated by user first name")
-	assert.Equal(suite.T(), "Andre", group.UpdatedByUser.FirstName, "Invalid updated by user first name")
+	assert.Equal(suite.T(), "admin", user.CreatedByUser.Username, "Invalid ceated by user first name")
+	assert.Equal(suite.T(), "admin", user.UpdatedByUser.Username, "Invalid updated by user first name")
 }
 
 func (suite *ActionsTestSuite) Test006QueryStruct() {
