@@ -19,8 +19,8 @@ type Config struct {
 
 type User struct {
 	ID          string `json:"id" sql:"id" pk:"true"`
-	FirstName   string `json:"firstName" sql:"first_name"`
-	LastName    string `json:"lastName" sql:"last_name"`
+	FirstName   string `json:"firstname" sql:"first_name"`
+	LastName    string `json:"lastname" sql:"last_name"`
 	Email       string `json:"email" sql:"email"`
 	Password    string `json:"password" sql:"password"`
 	Description string `json:"description" sql:"value" alias:"description" table:"translations" on:"description.structure_id = users.id and description.structure_field = 'description'"`
@@ -28,9 +28,12 @@ type User struct {
 }
 
 type Group struct {
-	ID     string `json:"id" sql:"id" pk:"true"`
-	Code   string `json:"code" sql:"code"`
-	Active bool   `json:"active" sql:"active"`
+	ID            string `json:"id" sql:"id" pk:"true"`
+	Code          string `json:"code" sql:"code"`
+	Active        bool   `json:"active" sql:"active"`
+	CreatedBy     string `json:"created_by" sql:"created_by"`
+	CreatedByUser *User  `json:"created_by_user" table:"users" alias:"created_by_user" on:"created_by_user.id = core_groups.created_by"`
+	UpdatedByUser *User  `json:"updated_by_user" table:"users" alias:"updated_by_user" on:"updated_by_user.id = core_groups.updated_by"`
 }
 
 type ActionsTestSuite struct {
@@ -118,7 +121,15 @@ func (suite *ActionsTestSuite) Test004LoadStructArray() {
 	assert.NotEmpty(suite.T(), users, "Empty array")
 }
 
-func (suite *ActionsTestSuite) Test005QueryStruct() {
+func (suite *ActionsTestSuite) Test005LoadEmbeddedStruct() {
+	group := Group{}
+	err := LoadStruct("core_groups", &group, builder.Equal("core_groups.id", "2ab02254-8878-42a5-901c-9d40e3052ac8"))
+	assert.NoError(suite.T(), err, "Error loading array struct")
+	assert.Equal(suite.T(), "Andre", group.CreatedByUser.FirstName, "Invalid ceated by user first name")
+	assert.Equal(suite.T(), "Andre", group.UpdatedByUser.FirstName, "Invalid updated by user first name")
+}
+
+func (suite *ActionsTestSuite) Test006QueryStruct() {
 	statement := builder.Select("id", "first_name", "email").From("users").Where(builder.Equal("id", suite.InstanceID))
 	user := User{}
 	err := QueryStruct(statement, &user)
@@ -126,7 +137,7 @@ func (suite *ActionsTestSuite) Test005QueryStruct() {
 	assert.Equal(suite.T(), "user@teste.com", user.Email)
 }
 
-func (suite *ActionsTestSuite) Test006DeleteStruct() {
+func (suite *ActionsTestSuite) Test007DeleteStruct() {
 	err := DeleteStruct("users", builder.Equal("id", suite.InstanceID))
 	assert.NoError(suite.T(), err, "Error deleting object")
 }

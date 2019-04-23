@@ -9,9 +9,9 @@ import (
 )
 
 func TestStructSelectQuery(t *testing.T) {
-	users := []User{}
+	group := Group{}
 
-	query, values, err := StructSelectQuery("users", &users, builder.Equal("id", "0000001"))
+	query, values, err := StructSelectQuery("core_groups", &group, builder.Equal("core_groups.id", "0000001"))
 	assert.NoError(t, err, "invalid interface")
 	fmt.Println(values)
 	assert.Equal(t, "query", query)
