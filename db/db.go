@@ -11,7 +11,7 @@ import (
 var db *sql.DB
 
 //Connect connects to the database
-func Connect(host string, port int, user, password, dbname string, sslmode bool) error {
+func Connect(host string, port int, user, password, dbname string, sslmode bool) (*sql.DB, error) {
 
 	connStr := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s", host, port, user, password, dbname)
 	if sslmode {
@@ -21,15 +21,15 @@ func Connect(host string, port int, user, password, dbname string, sslmode bool)
 	var err error
 	db, err = sql.Open("postgres", connStr)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	err = db.Ping()
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return nil
+	return db, nil
 }
 
 //Close database connection
